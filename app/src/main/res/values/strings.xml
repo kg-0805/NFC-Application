@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">NFC Demo</string>
+    <string name="cart_title">Shopping Cart</string>
+    <string name="total_amount">Total: ₹%1$d</string>
+    <string name="no_items">Cart is empty</string>
+    <string name="add_apple">Add Apple (₹50)</string>
+    <string name="add_banana">Add Banana (₹30)</string>
+    <string name="add_orange">Add Orange (₹40)</string>
+    <string name="clear_cart">Clear Cart</string>
+    <string name="payment_methods">Payment Methods Comparison</string>
+    <string name="nfc_payment">NFC Payment</string>
+    <string name="card_payment">Card Payment</string>
+    <string name="cash_payment">Cash Payment</string>
+    <string name="tap_to_pay">Tap your NFC device to pay</string>
+    <string name="payment_success">✅ Payment Successful!</string>
+    <string name="payment_failed">❌ Payment Failed</string>
+    <string name="nfc_not_supported">NFC not supported on this device</string>
+    <string name="cart_empty">Please add items to cart first</string>
+    <string name="timing_results">Speed Comparison Results</string>
+    <string name="nfc_time">NFC: %1$.2f seconds</string>
+    <string name="card_time">Card: %1$.2f seconds</string>
+    <string name="cash_time">Cash: %1$.2f seconds</string>
+    <string name="fastest_method">🏆 NFC is %1$.1fx faster!</string>
+</resources>
