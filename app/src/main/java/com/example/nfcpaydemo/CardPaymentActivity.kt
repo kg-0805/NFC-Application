@@ -44,6 +44,7 @@ class CardPaymentActivity : AppCompatActivity() {
         setupClickListeners()
         setupExpiryFormatting()
         setupCardTypeDetection()
+        setupFieldValidation()
     }
 
     private fun initViews() {
@@ -249,6 +250,46 @@ class CardPaymentActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+    
+    private fun setupFieldValidation() {
+        etCardNumber.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val cardNumber = etCardNumber.text.toString().trim()
+                when {
+                    cardNumber.length != 16 -> showToast("Please enter a valid 16-digit card number")
+                    getCardType(cardNumber) == "Unknown" -> showToast("Invalid card type")
+                }
+            }
+        }
+        
+        etExpiry.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val expiry = etExpiry.text.toString().trim()
+                when {
+                    expiry.length != 5 || !expiry.contains("/") -> showToast("Please enter expiry in MM/YY format")
+                    !isValidExpiry(expiry) -> showToast("Card has expired")
+                }
+            }
+        }
+        
+        etCVV.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val cvv = etCVV.text.toString().trim()
+                if (cvv.length != 3) {
+                    showToast("Please enter a valid 3-digit CVV")
+                }
+            }
+        }
+        
+        etCardName.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val name = etCardName.text.toString().trim()
+                if (name.isEmpty()) {
+                    showToast("Please enter cardholder name")
+                }
+            }
+        }
     }
 
     private fun showToast(message: String) {
