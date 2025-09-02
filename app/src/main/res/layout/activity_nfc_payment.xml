@@ -112,6 +112,67 @@
 
             </LinearLayout>
 
+            <!-- PIN Entry Screen -->
+            <LinearLayout
+                android:id="@+id/pinScreen"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_background"
+                android:padding="32dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:text="🔒"
+                    android:textSize="64sp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Enter PIN"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Please enter your 4-digit PIN to complete the payment"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/etPIN"
+                    android:layout_width="200dp"
+                    android:layout_height="56dp"
+                    android:hint="Enter 4-digit PIN"
+                    android:inputType="numberPassword"
+                    android:maxLength="4"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/card_background"
+                    android:padding="16dp"
+                    android:textAlignment="center"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnSubmitPIN"
+                    android:text="Submit PIN"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:backgroundTint="@color/nfc_blue"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
             <!-- Success Screen -->
             <LinearLayout
                 android:id="@+id/successScreen"

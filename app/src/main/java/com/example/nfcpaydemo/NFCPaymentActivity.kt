@@ -25,12 +25,15 @@ class NFCPaymentActivity : AppCompatActivity() {
     
     private lateinit var nfcTapScreen: LinearLayout
     private lateinit var processingScreen: LinearLayout
+    private lateinit var pinScreen: LinearLayout
     private lateinit var successScreen: LinearLayout
     private lateinit var failureScreen: LinearLayout
     
     private lateinit var btnBack: Button
     private lateinit var btnDone: Button
     private lateinit var btnTryAgain: Button
+    private lateinit var btnSubmitPIN: Button
+    private lateinit var etPIN: android.widget.EditText
     private lateinit var tvTimeTaken: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,12 +49,15 @@ class NFCPaymentActivity : AppCompatActivity() {
     private fun initViews() {
         nfcTapScreen = findViewById(R.id.nfcTapScreen)
         processingScreen = findViewById(R.id.processingScreen)
+        pinScreen = findViewById(R.id.pinScreen)
         successScreen = findViewById(R.id.successScreen)
         failureScreen = findViewById(R.id.failureScreen)
         
         btnBack = findViewById(R.id.btnBack)
         btnDone = findViewById(R.id.btnDone)
         btnTryAgain = findViewById(R.id.btnTryAgain)
+        btnSubmitPIN = findViewById(R.id.btnSubmitPIN)
+        etPIN = findViewById(R.id.etPIN)
         tvTimeTaken = findViewById(R.id.tvTimeTaken)
     }
 
@@ -65,6 +71,20 @@ class NFCPaymentActivity : AppCompatActivity() {
             showNFCTapScreen()
             startNFCPayment()
         }
+        btnSubmitPIN.setOnClickListener {
+            val pin = etPIN.text.toString().trim()
+            if (pin == "2580") {
+                showProcessingScreen()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val duration = (System.currentTimeMillis() - paymentStartTime) / 1000.0
+                    paymentStartTime = 0L
+                    showSuccessScreen(duration)
+                }, 2000)
+            } else {
+                android.widget.Toast.makeText(this, "Incorrect PIN", android.widget.Toast.LENGTH_SHORT).show()
+                etPIN.text.clear()
+            }
+        }
     }
 
     private fun startNFCPayment() {
@@ -75,13 +95,24 @@ class NFCPaymentActivity : AppCompatActivity() {
     private fun showNFCTapScreen() {
         nfcTapScreen.visibility = View.VISIBLE
         processingScreen.visibility = View.GONE
+        pinScreen.visibility = View.GONE
         successScreen.visibility = View.GONE
         failureScreen.visibility = View.GONE
+    }
+    
+    private fun showPINScreen() {
+        nfcTapScreen.visibility = View.GONE
+        processingScreen.visibility = View.GONE
+        pinScreen.visibility = View.VISIBLE
+        successScreen.visibility = View.GONE
+        failureScreen.visibility = View.GONE
+        etPIN.text.clear()
     }
 
     private fun showProcessingScreen() {
         nfcTapScreen.visibility = View.GONE
         processingScreen.visibility = View.VISIBLE
+        pinScreen.visibility = View.GONE
         successScreen.visibility = View.GONE
         failureScreen.visibility = View.GONE
     }
@@ -89,6 +120,7 @@ class NFCPaymentActivity : AppCompatActivity() {
     private fun showSuccessScreen(duration: Double) {
         nfcTapScreen.visibility = View.GONE
         processingScreen.visibility = View.GONE
+        pinScreen.visibility = View.GONE
         successScreen.visibility = View.VISIBLE
         failureScreen.visibility = View.GONE
         
@@ -99,6 +131,7 @@ class NFCPaymentActivity : AppCompatActivity() {
     private fun showFailureScreen() {
         nfcTapScreen.visibility = View.GONE
         processingScreen.visibility = View.GONE
+        pinScreen.visibility = View.GONE
         successScreen.visibility = View.GONE
         failureScreen.visibility = View.VISIBLE
         
@@ -172,8 +205,7 @@ class NFCPaymentActivity : AppCompatActivity() {
                         ndef.close()
                         
                         if (isValidPayment) {
-                            paymentStartTime = 0L
-                            showSuccessScreen(duration)
+                            showPINScreen()
                         } else {
                             showFailureScreen()
                             paymentStartTime = System.currentTimeMillis()

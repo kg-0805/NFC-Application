@@ -19,6 +19,12 @@ import android.widget.LinearLayout
 import android.media.ToneGenerator
 import android.media.AudioManager
 import androidx.activity.result.contract.ActivityResultContracts
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.content.Context
+import android.view.GestureDetector
+import android.view.MotionEvent
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +39,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusMessage: TextView
     private lateinit var btnPayNow: Button
     private lateinit var btnClearCart: Button
+    private lateinit var vibrator: Vibrator
+    private lateinit var gestureDetector: GestureDetector
+    
+    private var sessionStartTime = System.currentTimeMillis()
+    private val SESSION_TIMEOUT = 300000L // 5 minutes
+    private val MAX_TRANSACTION_AMOUNT = 10000 // ₹10,000 limit
     
     private val paymentResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -45,7 +57,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        try {
+            nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+            vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            gestureDetector = GestureDetector(this, SwipeGestureListener())
+        } catch (e: Exception) {
+            // Handle initialization errors
+        }
         initViews()
         setupClickListeners()
     }
@@ -59,21 +77,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         findViewById<Button>(R.id.addApple).setOnClickListener {
+            hapticFeedback()
+            playTone(ToneGenerator.TONE_PROP_BEEP)
             cart["Apple"] = (cart["Apple"] ?: 0) + 1
             updateCartUI()
         }
 
         findViewById<Button>(R.id.addBanana).setOnClickListener {
+            hapticFeedback()
+            playTone(ToneGenerator.TONE_PROP_BEEP)
             cart["Banana"] = (cart["Banana"] ?: 0) + 1
             updateCartUI()
         }
 
         findViewById<Button>(R.id.addOrange).setOnClickListener {
+            hapticFeedback()
+            playTone(ToneGenerator.TONE_PROP_BEEP)
             cart["Orange"] = (cart["Orange"] ?: 0) + 1
             updateCartUI()
         }
 
         btnClearCart.setOnClickListener {
+            hapticFeedback()
+            playTone(ToneGenerator.TONE_PROP_BEEP2)
             cart.clear()
             updateCartUI()
         }
@@ -83,6 +109,21 @@ class MainActivity : AppCompatActivity() {
                 showStatus(getString(R.string.cart_empty), android.R.color.holo_red_light)
                 return@setOnClickListener
             }
+            
+            // Check session timeout
+            if (System.currentTimeMillis() - sessionStartTime > SESSION_TIMEOUT) {
+                showSessionTimeoutDialog()
+                return@setOnClickListener
+            }
+            
+            // Check transaction limit
+            val total = cart.map { prices[it.key]!! * it.value }.sum()
+            if (total > MAX_TRANSACTION_AMOUNT) {
+                showTransactionLimitDialog(total)
+                return@setOnClickListener
+            }
+            
+            hapticFeedback()
             val intent = Intent(this, PaymentOptionsActivity::class.java)
             paymentResultLauncher.launch(intent)
         }
@@ -120,7 +161,8 @@ class MainActivity : AppCompatActivity() {
     private fun completePayment(method: String, duration: Double) {
         paymentTimes[method] = duration
         
-        // Play success tone
+        // Play success tone and haptic
+        hapticFeedback(VibrationEffect.DEFAULT_AMPLITUDE, 500)
         playTone(ToneGenerator.TONE_PROP_ACK)
         
         showStatus("✅ Payment Successful!", android.R.color.holo_green_light)
@@ -217,6 +259,7 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         showStatus("Processing payment...", android.R.color.holo_orange_light)
                         Handler(Looper.getMainLooper()).postDelayed({
+                            hapticFeedback(VibrationEffect.DEFAULT_AMPLITUDE, 300)
                             playTone(ToneGenerator.TONE_PROP_NACK)
                             showStatus("❌ Payment Failed - Invalid card", android.R.color.holo_red_light)
                             paymentStartTime = System.currentTimeMillis() // Reset timer
@@ -239,6 +282,107 @@ class MainActivity : AppCompatActivity() {
                 }, 2000) // 2 second processing delay
             }
         }
+    }
+    
+    private fun showSessionTimeoutDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("⚠️ Session Expired")
+            .setMessage("Your session has expired for security reasons. Please restart the app.")
+            .setPositiveButton("Restart") { _, _ -> 
+                sessionStartTime = System.currentTimeMillis()
+                cart.clear()
+                updateCartUI()
+            }
+            .setCancelable(false)
+            .show()
+    }
+    
+    private fun showTransactionLimitDialog(amount: Int) {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("⚠️ Transaction Limit Exceeded")
+            .setMessage("Transaction amount ₹$amount exceeds the limit of ₹$MAX_TRANSACTION_AMOUNT. Please reduce items.")
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+    
+    private fun hapticFeedback(amplitude: Int = VibrationEffect.DEFAULT_AMPLITUDE, duration: Long = 50) {
+        try {
+            if (::vibrator.isInitialized && vibrator.hasVibrator()) {
+                vibrator.vibrate(VibrationEffect.createOneShot(duration, amplitude))
+            }
+        } catch (e: Exception) {
+            // Ignore vibration errors
+        }
+    }
+    
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return try {
+            if (::gestureDetector.isInitialized) {
+                gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
+            } else {
+                super.onTouchEvent(event)
+            }
+        } catch (e: Exception) {
+            super.onTouchEvent(event)
+        }
+    }
+    
+    private inner class SwipeGestureListener : GestureDetector.SimpleOnGestureListener() {
+        private val SWIPE_THRESHOLD = 100
+        private val SWIPE_VELOCITY_THRESHOLD = 100
+        
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            if (e1 == null) return false
+            
+            val diffY = e2.y - e1.y
+            val diffX = e2.x - e1.x
+            
+            if (abs(diffX) > abs(diffY)) {
+                if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        onSwipeRight()
+                    } else {
+                        onSwipeLeft()
+                    }
+                    return true
+                }
+            } else {
+                if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        onSwipeDown()
+                    } else {
+                        onSwipeUp()
+                    }
+                    return true
+                }
+            }
+            return false
+        }
+    }
+    
+    private fun onSwipeRight() {
+        hapticFeedback()
+        if (!cart.isEmpty()) {
+            val intent = Intent(this, PaymentOptionsActivity::class.java)
+            paymentResultLauncher.launch(intent)
+        }
+    }
+    
+    private fun onSwipeLeft() {
+        hapticFeedback()
+        cart.clear()
+        updateCartUI()
+        Toast.makeText(this, "Cart cleared", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun onSwipeUp() {
+        hapticFeedback()
+        Toast.makeText(this, "Swipe right to pay, left to clear cart", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun onSwipeDown() {
+        hapticFeedback()
+        Toast.makeText(this, "Swipe right to pay, left to clear cart", Toast.LENGTH_SHORT).show()
     }
 }
 

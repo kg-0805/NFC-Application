@@ -12,6 +12,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import android.view.inputmethod.InputMethodManager
+import android.content.Context
 
 class CardPaymentActivity : AppCompatActivity() {
 
@@ -40,11 +42,13 @@ class CardPaymentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_card_payment)
         
+        paymentStartTime = System.currentTimeMillis()
         initViews()
         setupClickListeners()
         setupExpiryFormatting()
         setupCardTypeDetection()
         setupFieldValidation()
+        setupAutoFocus()
     }
 
     private fun initViews() {
@@ -74,13 +78,14 @@ class CardPaymentActivity : AppCompatActivity() {
         }
         
         btnProceed.setOnClickListener {
+            hideKeyboard()
             if (validateCardDetails()) {
-                paymentStartTime = System.currentTimeMillis()
                 showProcessingScreen()
             }
         }
         
         btnSubmitOTP.setOnClickListener {
+            hideKeyboard()
             if (validateOTP()) {
                 showProcessingScreen()
                 val finalProcessingTime = (1500..3000).random()
@@ -197,6 +202,10 @@ class CardPaymentActivity : AppCompatActivity() {
         processingScreen.visibility = View.GONE
         successScreen.visibility = View.GONE
         otpScreen.visibility = View.VISIBLE
+        
+        Handler(Looper.getMainLooper()).postDelayed({
+            etOTP.requestFocus()
+        }, 100)
     }
 
     private fun showSuccessScreen() {
@@ -257,8 +266,15 @@ class CardPaymentActivity : AppCompatActivity() {
             if (!hasFocus) {
                 val cardNumber = etCardNumber.text.toString().trim()
                 when {
-                    cardNumber.length != 16 -> showToast("Please enter a valid 16-digit card number")
-                    getCardType(cardNumber) == "Unknown" -> showToast("Invalid card type")
+                    cardNumber.length != 16 -> {
+                        etCardNumber.error = "Please enter a valid 16-digit card number"
+                        showToast("Please enter a valid 16-digit card number")
+                    }
+                    getCardType(cardNumber) == "Unknown" -> {
+                        etCardNumber.error = "Invalid card type"
+                        showToast("Invalid card type")
+                    }
+                    else -> etCardNumber.error = null
                 }
             }
         }
@@ -267,8 +283,15 @@ class CardPaymentActivity : AppCompatActivity() {
             if (!hasFocus) {
                 val expiry = etExpiry.text.toString().trim()
                 when {
-                    expiry.length != 5 || !expiry.contains("/") -> showToast("Please enter expiry in MM/YY format")
-                    !isValidExpiry(expiry) -> showToast("Card has expired")
+                    expiry.length != 5 || !expiry.contains("/") -> {
+                        etExpiry.error = "Please enter expiry in MM/YY format"
+                        showToast("Please enter expiry in MM/YY format")
+                    }
+                    !isValidExpiry(expiry) -> {
+                        etExpiry.error = "Card has expired"
+                        showToast("Card has expired")
+                    }
+                    else -> etExpiry.error = null
                 }
             }
         }
@@ -277,7 +300,10 @@ class CardPaymentActivity : AppCompatActivity() {
             if (!hasFocus) {
                 val cvv = etCVV.text.toString().trim()
                 if (cvv.length != 3) {
+                    etCVV.error = "Please enter a valid 3-digit CVV"
                     showToast("Please enter a valid 3-digit CVV")
+                } else {
+                    etCVV.error = null
                 }
             }
         }
@@ -286,10 +312,52 @@ class CardPaymentActivity : AppCompatActivity() {
             if (!hasFocus) {
                 val name = etCardName.text.toString().trim()
                 if (name.isEmpty()) {
+                    etCardName.error = "Please enter cardholder name"
                     showToast("Please enter cardholder name")
+                } else {
+                    etCardName.error = null
                 }
             }
         }
+    }
+
+    private fun setupAutoFocus() {
+        etCardNumber.requestFocus()
+        
+        etCardNumber.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length == 16) {
+                    etExpiry.requestFocus()
+                }
+            }
+        })
+        
+        etExpiry.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length == 5) {
+                    etCVV.requestFocus()
+                }
+            }
+        })
+        
+        etCVV.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length == 3) {
+                    etCardName.requestFocus()
+                }
+            }
+        })
+    }
+    
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
     }
 
     private fun showToast(message: String) {
