@@ -32,7 +32,42 @@ A comprehensive Android application demonstrating Near Field Communication (NFC)
 
 ## 📱 Screenshots
 
-*Add screenshots of your app here*
+### Main App Flow
+<div align="center">
+  <img src="screenshots/01_main_screen.jpg" width="200" />
+  <img src="screenshots/02_cart_items.jpg" width="200" />
+  <img src="screenshots/03_payment_screen.jpg" width="200" />
+</div>
+
+### NFC Payment Flow
+<div align="center">
+  <img src="screenshots/04_NFC_payment.jpg" width="200" />
+  <img src="screenshots/05_NFC_in_process.jpg" width="200" />
+  <img src="screenshots/06_NFC_failure.jpg" width="200" />
+</div>
+
+<div align="center">
+  <img src="screenshots/07_NFC_pin_enter.jpg" width="200" />
+  <img src="screenshots/08_NFC_success.jpg" width="200" />
+</div>
+
+### UPI Payment Flow
+<div align="center">
+  <img src="screenshots/09_UPI_payment.jpg" width="200" />
+  <img src="screenshots/10_UPI_process.jpg" width="200" />
+  <img src="screenshots/11_UPI_Success.jpg" width="200" />
+</div>
+
+### Card Payment Flow
+<div align="center">
+  <img src="screenshots/12_Card_payment_screen.jpg" width="200" />
+  <img src="screenshots/13_card_payment_process.jpg" width="200" />
+  <img src="screenshots/14_card_payment_otp_screen.jpg" width="200" />
+</div>
+
+<div align="center">
+  <img src="screenshots/15_card_payment_success.jpg" width="200" />
+</div>
 
 ## 🛠️ Technical Stack
 
@@ -172,7 +207,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨💻 Author
 
 **kartik Gupta**
-- GitHub: [@/kg-0805](https://github.com//kg-0805)
+- GitHub: [@/Kartik Gupta](https://github.com/kg-0805)
 - LinkedIn: [Kartik Gupta](https://linkedin.com/in/kg-0805)
 
 ## 🙏 Acknowledgments
