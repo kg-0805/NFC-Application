@@ -56,7 +56,7 @@ A comprehensive Android application demonstrating Near Field Communication (NFC)
 1. **Clone the repository**
    ```bash
    git clone https://github.com/kg-0805/NFC-Application.git
-   cd NFCPayDemo
+   cd NFC-Application
    ```
 
 2. **Open in Android Studio**
